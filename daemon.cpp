@@ -283,7 +283,7 @@ void parse_config()
 	std::string allowed_ip_str;
 
 	try {
-		boost::property_tree::ini_parser::read_ini("server.cfg", pt);
+		boost::property_tree::ini_parser::read_ini("daemon.cfg", pt);
 		crypt_key = pt.get<std::string>("crypt_key");
 		allowed_ip_str = pt.get<std::string>("allowed_ip");
 		port = pt.get<int>("server_port");
@@ -301,6 +301,26 @@ void parse_config()
 	}
 }
 
+/**
+ * Лог
+ */
+void dlog()
+{
+	
+}
+
+/**
+ * Обрезание, либо добивание ключа шифрования до размера 16 байт
+ */
+void fix_crypt_key()
+{
+	if (crypt_key.size() < 16) {
+		crypt_key = crypt_key + std::string(16-crypt_key.size(), '*');
+	} else if (crypt_key.size() > 16) {
+		crypt_key = crypt_key.substr(0, 16);
+	}
+}
+
 void stop_daemon()
 {
 	stop = true;
@@ -308,6 +328,10 @@ void stop_daemon()
 
 void run_daemon()
 {
+	if (crypt_key.size() != 16) {
+		fix_crypt_key();
+	}
+	
 	boost::thread_group threads;
 	threads.create_thread(accept_thread);
 	threads.create_thread(handle_clients_thread);
@@ -316,8 +340,6 @@ void run_daemon()
 
 int main(int argc, char* argv[]) 
 {
-    parse_config();
-
 #ifdef WIN32
 	// Run Windows service
 	SERVICE_TABLE_ENTRY ServiceTable[] =
@@ -332,6 +354,26 @@ int main(int argc, char* argv[])
 		return GetLastError();
 	}
 #else
-	run_daemon();
+	int pid = fork();
+	
+	switch(pid) {
+		case 0:
+			setsid();
+			
+			fclose(stdin);
+			fclose(stdout);
+			fclose(stderr);
+			
+			parse_config();
+			run_daemon();
+			exit(0);
+		case -1:
+			printf("Fail: unable to fork\n");
+		break;
+		
+		default:
+			printf("OK: demon with pid %d is created\n", pid);
+		break;
+	}
 #endif
 }
