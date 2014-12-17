@@ -55,7 +55,39 @@ std::string trim(std::string& str)
 
 void fast_exec(std::string command)
 {
+#ifdef _WIN32
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+
+	wchar_t* szCmdline = new wchar_t[strlen(command.c_str()) + 1];
+	mbstowcs(szCmdline, command.c_str(), strlen(command.c_str()) + 1);
+
+	// Start the child process. 
+	if (!CreateProcess(NULL,   // No module name (use command line)
+		szCmdline,      // Command line
+		NULL,           // Process handle not inheritable
+		NULL,           // Thread handle not inheritable
+		FALSE,          // Set handle inheritance to FALSE
+		0,              // No creation flags
+		NULL,           // Use parent's environment block
+		NULL,           // Use parent's starting directory 
+		&si,            // Pointer to STARTUPINFO structure
+		&pi)           // Pointer to PROCESS_INFORMATION structure
+		)
+	{
+		return;
+	}
+
+	// Close process and thread handles. 
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+#else
 	boost::thread bthrd(boost::bind(exec, command));
+#endif
 }
 
 // ---------------------------------------------------------------------
