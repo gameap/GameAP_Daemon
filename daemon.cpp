@@ -174,15 +174,56 @@ private:
 				
 				jsend["command_results"][i] = command_results[i];
 			}
-			jsend["status"] = 20;
+			jsend["status"] = 10;
+		}
+		else if (jroot["type"].asString() == "read_dir") {
+			// Read directory
+			std::vector<std::string> files = std::vector<std::string>();
+			
+			if (getdir(jroot["dir"].asString(),files) == -1) {
+				// Read failed
+				jsend["status"] = 31;
+			} 
+			else {
+				for (unsigned int i = 2;i < files.size();i++) {
+					jsend["list"][i-2] = files[i];
+				}
+				
+				jsend["status"] = 10;
+			}
+		}
+		else if (jroot["type"].asString() == "read_file") {
+			// Read file
+			
+			if (!file_exists(jroot["file"].asString())) {
+				jsend["status"] = 41;
+			} else {
+				jsend["contents"] 	= file_get_contents(jroot["file"].asString());
+				jsend["filesize"] 	= std::to_string(jsend["contents"].asString().size());
+				jsend["status"] 	= 10;
+			}
+		}
+		else if (jroot["type"].asString() == "write_file") {
+			// Write file
+			
+			if (file_put_contents(jroot["file"].asString(), jroot["contents"].asString())) {
+				jsend["status"] = 10;
+			} 
+			else {
+				jsend["status"] = 51;
+			}
 		}
 		else if (jroot["type"].asString() == "install") {
 			// Install game server
-			jsend["status"] = 20;
+			jsend["status"] = 10;
+		}
+		else if (jroot["type"].asString() == "get_stats") {
+			// Get CPU and RAM stats
+			jsend["status"] = 10;
 		}
 		else {
 			// Unknown type
-			jsend["status"] = 31;
+			jsend["status"] = 1;
 		}
 		
 		Json::StyledWriter writer;
@@ -340,6 +381,11 @@ void run_daemon()
 
 int main(int argc, char* argv[]) 
 {
+	// Debug
+	parse_config();
+	run_daemon();
+	return 0;
+	
 #ifdef WIN32
 	// Run Windows service
 	SERVICE_TABLE_ENTRY ServiceTable[] =

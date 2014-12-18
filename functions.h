@@ -40,4 +40,16 @@ int get_cores_count();
 
 bool in_array(const std::string &needle, const std::vector< std::string > &haystack);
 
+// ---------------------------------------------------------------------
+
+int getdir (std::string dir, std::vector<std::string> &files);
+
+// ---------------------------------------------------------------------
+
+std::string file_get_contents(std::string filename);
+
+// ---------------------------------------------------------------------
+
+bool file_put_contents(std::string filename, std::string contents);
+
 #endif

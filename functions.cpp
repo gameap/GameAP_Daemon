@@ -17,8 +17,13 @@
 #endif
 
 #include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
 
 #include "functions.h"
+
+#include <algorithm>
+#include <sys/types.h>
+#include <dirent.h>
 
 // ---------------------------------------------------------------------
 
@@ -172,7 +177,7 @@ bool file_exists(std::string file_name)
 // ---------------------------------------------------------------------
 
 /**
-* �������� ���������� ����
+* Ïîëó÷àåò êîëè÷åñòâî ÿäåð
 */
 int get_cores_count() {
 #ifdef WIN32
@@ -210,4 +215,67 @@ bool in_array(const std::string &needle, const std::vector< std::string > &hayst
         if (haystack[i]==needle)
             return true;
     return false;
+}
+
+// ---------------------------------------------------------------------
+
+/**
+ * Получение содержимого директории
+ */
+int getdir (std::string dir, std::vector<std::string> &files)
+{
+    DIR *dp;
+    struct dirent *dirp;
+
+    if ((dp  = opendir(dir.c_str())) == NULL) {
+        //~ cout << "Error(" << errno << ") opening " << dir << endl;
+        return errno;
+    }
+
+    while ((dirp = readdir(dp)) != NULL) {
+        files.push_back(std::string(dirp->d_name));
+    }
+
+    closedir(dp);
+    sort (files.begin(), files.end()); //added from computing.net tip
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------
+
+std::string file_get_contents(std::string filename)
+{
+	std::string line;
+	std::string contents = "";
+	
+	std::ifstream file(filename);
+	
+	if (file.is_open())
+	{
+		while (getline(file,line))
+		{
+			contents = contents + line + "\n";
+		}
+		
+		file.close();
+		return contents;
+	}
+
+	return "";
+}
+
+// ---------------------------------------------------------------------
+
+bool file_put_contents(std::string filename, std::string contents)
+{
+	std::ofstream file(filename);
+	
+	if (file.is_open()) {
+		file << contents;
+		file.close();
+		return true;
+	} else {
+		return false;
+	}
 }
