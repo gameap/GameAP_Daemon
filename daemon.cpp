@@ -379,6 +379,15 @@ void run_daemon()
 	threads.join_all();
 }
 
+bool daemon_status() 
+{
+	if (!file_exists("daemon.pid")) {
+		return true;
+	}
+	
+	return false;
+}
+
 int main(int argc, char* argv[]) 
 {
 	// Debug
@@ -387,7 +396,7 @@ int main(int argc, char* argv[])
 	//~ return 0;
 	
 	if (argc >= 2 && (!strcmp(argv[1], "kill") || !strcmp(argv[1], "stop"))) {
-		if (!file_exists("daemon.pid")) {
+		if (!daemon_status()) {
 			printf("Failed: daemon not running\n");
 			return 0;
 		}
@@ -413,7 +422,7 @@ int main(int argc, char* argv[])
 	}
 	#endif
 	
-	if (file_exists("daemon.pid")) {
+	if (daemon_status()) {
 		printf("Failed: daemon is already running\n");
 		return 0;
 	}
