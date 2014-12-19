@@ -382,11 +382,43 @@ void run_daemon()
 int main(int argc, char* argv[]) 
 {
 	// Debug
-	parse_config();
-	run_daemon();
-	return 0;
+	//~ parse_config();
+	//~ run_daemon();
+	//~ return 0;
 	
-#ifdef WIN32
+	if (argc >= 2 && (!strcmp(argv[1], "kill") || !strcmp(argv[1], "stop"))) {
+		if (!file_exists("daemon.pid")) {
+			printf("Failed: daemon not running\n");
+			return 0;
+		}
+		
+		std::string pid = file_get_contents("daemon.pid");
+		
+		#ifdef WIN32
+			fast_exec("taskkill /f /pid " + pid);
+		#else
+			fast_exec("kill " + pid);
+		#endif
+		
+		printf("OK: demon with pid %d is stopped\n", atoi(pid.c_str()));
+		
+		remove("daemon.pid");
+		return 0;
+	} 
+	#ifdef WIN32
+	else if (!strcmp(argv[1], "run")) {
+		parse_config();
+		run_daemon();
+		return 0;
+	}
+	#endif
+	
+	if (file_exists("daemon.pid")) {
+		printf("Failed: daemon is already running\n");
+		return 0;
+	}
+	
+	#ifdef WIN32
 	// Run Windows service
 	SERVICE_TABLE_ENTRY ServiceTable[] =
 	{
@@ -399,7 +431,7 @@ int main(int argc, char* argv[])
 		OutputDebugString(L"GDaemon: Main: StartServiceCtrlDispatcher returned error");
 		return GetLastError();
 	}
-#else
+	#else
 	int pid = fork();
 	
 	switch(pid) {
@@ -418,6 +450,7 @@ int main(int argc, char* argv[])
 		break;
 		
 		default:
+			file_put_contents("daemon.pid", std::to_string(pid));
 			printf("OK: demon with pid %d is created\n", pid);
 		break;
 	}
