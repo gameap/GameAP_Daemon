@@ -44,7 +44,6 @@ int port = 31707;							// Используемый порт
 
 std::map<std::string,std::string> client_keys;		// Список клиенских ключей
 
-bool wait = false;							// Ожидание исполнения команды
 bool stop = false;
 
 struct talk_to_client : boost::enable_shared_from_this<talk_to_client> {
@@ -70,7 +69,7 @@ struct talk_to_client : boost::enable_shared_from_this<talk_to_client> {
 	
     ip::tcp::socket & sock() { return sock_; }
     
-    bool timed_out() const 
+	bool timed_out() const
     {
         ptime now = microsec_clock::local_time();
         long long ms = (now - last_ping).total_milliseconds();
@@ -112,6 +111,7 @@ private:
             return; // message is not full
             
         client_ip = sock_.remote_endpoint().address().to_string();
+		wait = false;
             
         if (!allowed_ip.empty() && !in_array(client_ip, allowed_ip)) {
 			std::cout << "Ip not allowed: " << client_ip << std::endl;
@@ -178,16 +178,16 @@ private:
 			
 			int jsize = jroot["commands"].size();
 			std::vector<std::string> command_results(jsize);
-			
+			wait = true;
 			for (int i = 0; i < jsize; i++) {
-				wait = true;
 				command_results[i] = exec(jroot["commands"][i].asString());
 				std::cout << "Command exec: " 	<< jroot["commands"][i].asString() << std::endl;
 				std::cout << "Result: " 		<< command_results[i] << std::endl;
-				wait = false;
+				std::cout << "Result size: " << command_results[i].size() << std::endl;
 				
 				jsend["command_results"][i] = command_results[i];
 			}
+			wait = false;
 			jsend["status"] = 10;
 		}
 		else if (jroot["type"].asString() == "read_dir") {
@@ -273,10 +273,12 @@ private:
     }
     
 	void write_crypt(const std::string & msg) {
+		std::cout << "Msg size: " << msg.size() << std::endl;
         write(aes_encrypt(msg, crypt_key));
     }
 
     void write(const std::string & msg) {
+		std::cout << "Msg crypt size: " << msg.size() << std::endl;
         sock_.write_some(buffer(msg));
         sock_.write_some(buffer("\n"));
     }
@@ -284,12 +286,13 @@ private:
 private:
     ip::tcp::socket sock_;
     enum { max_msg = 4096 };
-    int already_read_;
+	int already_read_;
     char buff_[max_msg];
     bool started_;
     ptime last_ping;
     std::string client_ip;
     std::string client_key;
+	bool wait = false;
 };
 
 void accept_thread() 
