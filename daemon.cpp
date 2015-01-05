@@ -381,7 +381,7 @@ void run_daemon()
 
 bool daemon_status() 
 {
-	if (!file_exists("daemon.pid")) {
+	if (file_exists("daemon.pid")) {
 		return true;
 	}
 	
@@ -415,7 +415,7 @@ int main(int argc, char* argv[])
 		return 0;
 	} 
 	#ifdef WIN32
-	else if (!strcmp(argv[1], "run")) {
+	else if (argc >= 2 && !strcmp(argv[1], "run")) {
 		parse_config();
 		run_daemon();
 		return 0;
@@ -428,40 +428,54 @@ int main(int argc, char* argv[])
 	}
 	
 	#ifdef WIN32
-	// Run Windows service
-	SERVICE_TABLE_ENTRY ServiceTable[] =
-	{
-		{ L"GameAP Daemon", (LPSERVICE_MAIN_FUNCTION)ServiceMain },
-		{ NULL, NULL }
-	};
 
-	if (StartServiceCtrlDispatcher(ServiceTable) == FALSE)
-	{
-		OutputDebugString(L"GDaemon: Main: StartServiceCtrlDispatcher returned error");
-		return GetLastError();
-	}
-	#else
-	int pid = fork();
-	
-	switch(pid) {
-		case 0:
-			setsid();
-			
-			fclose(stdin);
-			fclose(stdout);
-			fclose(stderr);
-			
-			parse_config();
-			run_daemon();
-			exit(0);
-		case -1:
-			printf("Fail: unable to fork\n");
-		break;
+		fast_exec("daemon.exe run");
+		Sleep(2000);
 		
-		default:
-			file_put_contents("daemon.pid", std::to_string(pid));
+		if (daemon_status()) {
+			std::string pid = file_get_contents("daemon.pid");
 			printf("OK: demon with pid %d is created\n", pid);
-		break;
-	}
-#endif
+			return 0;
+		}
+
+		/*
+		// Run Windows service
+		SERVICE_TABLE_ENTRY ServiceTable[] =
+		{
+			{ L"GameAP Daemon", (LPSERVICE_MAIN_FUNCTION)ServiceMain },
+			{ NULL, NULL }
+		};
+
+		if (StartServiceCtrlDispatcher(ServiceTable) == FALSE)
+		{
+			OutputDebugString(L"GDaemon: Main: StartServiceCtrlDispatcher returned error");
+			return GetLastError();
+		}
+		*/
+	#else
+		int pid = fork();
+	
+		switch(pid) {
+			case 0:
+				setsid();
+			
+				fclose(stdin);
+				fclose(stdout);
+				fclose(stderr);
+			
+				parse_config();
+				run_daemon();
+				exit(0);
+			case -1:
+				printf("Fail: unable to fork\n");
+			break;
+		
+			default:
+				file_put_contents("daemon.pid", std::to_string(pid));
+				printf("OK: demon with pid %d is created\n", pid);
+			break;
+		}
+	#endif
+	
+	return 0;
 }
