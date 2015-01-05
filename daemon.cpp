@@ -42,8 +42,9 @@ std::string crypt_key;						// Ключ для шифрования AES
 std::vector<std::string> allowed_ip;		// Список разрешенных IP
 int port = 31707;							// Используемый порт
 
-std::map<std::string,std::string> client_keys;				// Список клиенских ключей
+std::map<std::string,std::string> client_keys;		// Список клиенских ключей
 
+bool wait = false;							// Ожидание исполнения команды
 bool stop = false;
 
 struct talk_to_client : boost::enable_shared_from_this<talk_to_client> {
@@ -73,7 +74,18 @@ struct talk_to_client : boost::enable_shared_from_this<talk_to_client> {
     {
         ptime now = microsec_clock::local_time();
         long long ms = (now - last_ping).total_milliseconds();
-        return ms > 5000 ;
+
+		/*
+		Если выполняется команда, то timeout не учитывается,
+		т.к. команды могут выполняться продолжительное время.
+
+		Команда должна выполняться не более 20 минут.
+		*/
+		if (wait && ms < 1200000) {
+			return false;
+		}
+
+        return ms > 15000 ;
     }
     
     void stop() 
@@ -168,9 +180,11 @@ private:
 			std::vector<std::string> command_results(jsize);
 			
 			for (int i = 0; i < jsize; i++) {
+				wait = true;
 				command_results[i] = exec(jroot["commands"][i].asString());
 				std::cout << "Command exec: " 	<< jroot["commands"][i].asString() << std::endl;
 				std::cout << "Result: " 		<< command_results[i] << std::endl;
+				wait = false;
 				
 				jsend["command_results"][i] = command_results[i];
 			}
