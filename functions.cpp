@@ -49,6 +49,22 @@ int substr_count(std::string source, std::string substring)
 
 // ---------------------------------------------------------------------
 
+std::string str_replace(const std::string& search,
+                        const std::string& replace,
+                        const std::string& subject)
+{
+    std::string str = subject;
+    size_t pos = 0;
+    while((pos = str.find(search, pos)) != std::string::npos)
+    {
+        str.replace(pos, search.length(), replace);
+        pos += replace.length();
+    }
+    return str;
+}
+
+// ---------------------------------------------------------------------
+
 std::string trim(std::string& str)
 {
 	str.erase(0, str.find_first_not_of(' '));	//prefixing spaces
