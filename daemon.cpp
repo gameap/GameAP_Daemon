@@ -84,7 +84,7 @@ struct talk_to_client : boost::enable_shared_from_this<talk_to_client> {
 			return false;
 		}
 
-        return ms > 15000 ;
+        return ms > 60000 ;
     }
     
     void stop() 
@@ -119,7 +119,7 @@ private:
 			return;
 		}
 		
-		//~ std::cout << "Request from " << client_ip << std::endl;
+		std::cout << "Request from " << client_ip << std::endl;
             
         // process the msg
         last_ping = microsec_clock::local_time();
