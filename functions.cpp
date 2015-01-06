@@ -102,20 +102,18 @@ std::string exec(std::string command)
 	std::string excmd;
 	
 #ifdef _WIN32
-	FILE * f = _popen( &command[0], "rt" );
+	FILE * f = _popen(command.c_str(), "rt");
 #else
-	FILE * f = popen( &command[0], "r" );
+	FILE * f = popen(command.c_str(), "r");
 #endif
 	
     if ( f == 0 ) {
         return "";
     }
     
-    const int BUFSIZE = 16384;
-    char buf[ BUFSIZE ];
-    
-    while( fgets( buf, BUFSIZE,  f ) ) {
-        excmd = excmd + buf;
+    char buf[128];
+    while( fgets( buf, 128,  f ) ) {
+        excmd += buf;
     }
     
 #ifdef _WIN32
