@@ -119,7 +119,7 @@ private:
 			return;
 		}
 		
-		std::cout << "Request from " << client_ip << std::endl;
+		// std::cout << "Request from " << client_ip << std::endl;
             
         // process the msg
         last_ping = microsec_clock::local_time();
@@ -175,12 +175,19 @@ private:
 
 		if (jroot["type"].asString() == "commands") {
 			// Send commands
-			
+
+			std::string sendcmd;
 			int jsize = jroot["commands"].size();
 			std::vector<std::string> command_results(jsize);
 			wait = true;
 			for (int i = 0; i < jsize; i++) {
-				command_results[i] = exec(jroot["commands"][i].asString());
+				sendcmd = jroot["commands"][i].asString();
+
+				// Replace 
+				sendcmd = str_replace("%PROGRAMFILES%", "C:\\Programm Files", sendcmd);
+				sendcmd = str_replace("%WINDIR%", "C:\\Windows", sendcmd);
+
+				command_results[i] = exec(sendcmd);
 				std::cout << "Command exec: " 	<< jroot["commands"][i].asString() << std::endl;
 				std::cout << "Result: " 		<< command_results[i] << std::endl;
 				std::cout << "Result size: " << command_results[i].size() << std::endl;
@@ -189,6 +196,8 @@ private:
 			}
 			wait = false;
 			jsend["status"] = 10;
+			
+			sendcmd.clear();
 		}
 		else if (jroot["type"].asString() == "read_dir") {
 			// Read directory
