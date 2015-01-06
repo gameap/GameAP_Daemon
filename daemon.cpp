@@ -184,8 +184,10 @@ private:
 				sendcmd = jroot["commands"][i].asString();
 
 				// Replace 
-				sendcmd = str_replace("%PROGRAMFILES%", "C:\\Programm Files", sendcmd);
-				sendcmd = str_replace("%WINDIR%", "C:\\Windows", sendcmd);
+				#ifdef WIN32
+					sendcmd = str_replace("%PROGRAMFILES%", "C:\\Programm Files", sendcmd);
+					sendcmd = str_replace("%WINDIR%", "C:\\Windows", sendcmd);
+				#endif
 
 				command_results[i] = exec(sendcmd);
 				std::cout << "Command exec: " 	<< jroot["commands"][i].asString() << std::endl;
