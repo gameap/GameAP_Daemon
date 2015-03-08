@@ -17,11 +17,13 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
+#include "functions/functions.h" 
+#include "functions/files.h" 
 #include "crypt.h"
 
 #include <jsoncpp/json/json.h>
 
-#include "functions.h" 
+#include "request.h" 
 
 #ifdef WIN32
 #include "winservice.h"
@@ -172,84 +174,17 @@ private:
 			stop();
 			return;
 		}
-
-		if (jroot["type"].asString() == "commands") {
-			// Send commands
-
-			std::string sendcmd;
-			int jsize = jroot["commands"].size();
-			std::vector<std::string> command_results(jsize);
-			wait = true;
-			for (int i = 0; i < jsize; i++) {
-				sendcmd = jroot["commands"][i].asString();
-
-				// Replace 
-				#ifdef WIN32
-					sendcmd = str_replace("%PROGRAMFILES%", "C:\\Programm Files", sendcmd);
-					sendcmd = str_replace("%WINDIR%", "C:\\Windows", sendcmd);
-				#endif
-
-				command_results[i] = exec(sendcmd);
-				std::cout << "Command exec: " 	<< jroot["commands"][i].asString() << std::endl;
-				std::cout << "Result: " 		<< command_results[i] << std::endl;
-				std::cout << "Result size: " << command_results[i].size() << std::endl;
-				
-				jsend["command_results"][i] = command_results[i];
-			}
-			wait = false;
-			jsend["status"] = 10;
-			
-			sendcmd.clear();
-		}
-		else if (jroot["type"].asString() == "read_dir") {
-			// Read directory
-			std::vector<std::string> files = std::vector<std::string>();
-			
-			if (getdir(jroot["dir"].asString(),files) == -1) {
-				// Read failed
-				jsend["status"] = 31;
-			} 
-			else {
-				for (unsigned int i = 2;i < files.size();i++) {
-					jsend["list"][i-2] = files[i];
-				}
-				
-				jsend["status"] = 10;
-			}
-		}
-		else if (jroot["type"].asString() == "read_file") {
-			// Read file
-			
-			if (!file_exists(jroot["file"].asString())) {
-				jsend["status"] = 41;
-			} else {
-				jsend["contents"] 	= file_get_contents(jroot["file"].asString());
-				jsend["filesize"] 	= std::to_string(jsend["contents"].asString().size());
-				jsend["status"] 	= 10;
-			}
-		}
-		else if (jroot["type"].asString() == "write_file") {
-			// Write file
-			
-			if (file_put_contents(jroot["file"].asString(), jroot["contents"].asString())) {
-				jsend["status"] = 10;
-			} 
-			else {
-				jsend["status"] = 51;
-			}
-		}
-		else if (jroot["type"].asString() == "install") {
-			// Install game server
-			jsend["status"] = 10;
-		}
-		else if (jroot["type"].asString() == "get_stats") {
-			// Get CPU and RAM stats
-			jsend["status"] = 10;
-		}
-		else {
-			// Unknown type
+		
+		wait = true;
+		
+		try {
+			request_processing(jroot, jsend);
+		} catch( std::exception &e ) {
+			std::cerr << "Error: " << e.what() << std::endl;
 			jsend["status"] = 1;
 		}
+
+		wait = false;
 		
 		Json::StyledWriter writer;
         write_crypt(writer.write( jsend ));
@@ -296,7 +231,7 @@ private:
     
 private:
     ip::tcp::socket sock_;
-    enum { max_msg = 4096 };
+    enum { max_msg = 3145728 }; // 2 Mb + 40%
 	int already_read_;
     char buff_[max_msg];
     bool started_;
@@ -419,9 +354,9 @@ bool daemon_status()
 int main(int argc, char* argv[]) 
 {
 	// Debug
-	//~ parse_config();
-	//~ run_daemon();
-	//~ return 0;
+	parse_config();
+	run_daemon();
+	return 0;
 	
 	if (argc >= 2 && (!strcmp(argv[1], "kill") || !strcmp(argv[1], "stop"))) {
 		if (!daemon_status()) {

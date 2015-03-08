@@ -42,3 +42,33 @@ std::string aes_decrypt(const std::string& str_in, const std::string& key)
     );
     return str_out;
 } 
+
+// ---------------------------------------------------------------------
+
+std::string base64_encode(std::string string)
+{
+	std::string encoded;
+	   
+	CryptoPP::StringSource ss(string, true,
+		new CryptoPP::Base64Encoder(
+			new CryptoPP::StringSink(encoded)
+		)
+	);
+	
+	return encoded;
+}
+
+// ---------------------------------------------------------------------
+
+std::string base64_decode(std::string encoded)
+{
+	std::string decoded;
+	   
+	CryptoPP::StringSource ss(encoded, true,
+		new CryptoPP::Base64Decoder(
+			new CryptoPP::StringSink(decoded)
+		)
+	);
+	
+	return decoded;
+}
