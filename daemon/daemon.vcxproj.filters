@@ -18,13 +18,19 @@
     <ClCompile Include="..\daemon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\functions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\crypt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\winservice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\functions\functions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\functions\files.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\request.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,10 +38,16 @@
     <ClInclude Include="..\crypt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\functions.h">
+    <ClInclude Include="..\winservice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\winservice.h">
+    <ClInclude Include="..\functions\files.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\functions\functions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\request.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

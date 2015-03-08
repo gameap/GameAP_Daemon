@@ -90,12 +90,16 @@
   <ItemGroup>
     <ClCompile Include="..\crypt.cpp" />
     <ClCompile Include="..\daemon.cpp" />
-    <ClCompile Include="..\functions.cpp" />
+    <ClCompile Include="..\functions\files.cpp" />
+    <ClCompile Include="..\functions\functions.cpp" />
+    <ClCompile Include="..\request.cpp" />
     <ClCompile Include="..\winservice.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\crypt.h" />
-    <ClInclude Include="..\functions.h" />
+    <ClInclude Include="..\functions\files.h" />
+    <ClInclude Include="..\functions\functions.h" />
+    <ClInclude Include="..\request.h" />
     <ClInclude Include="..\winservice.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
