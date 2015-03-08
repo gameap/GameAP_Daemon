@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <jsoncpp/json/json.h>
 
 #include "functions/functions.h" 
