@@ -62,7 +62,7 @@ struct talk_to_client : boost::enable_shared_from_this<talk_to_client> {
         } catch ( boost::system::system_error&) {
             stop();
         }
-        
+
         if ( timed_out()) {
             stop();
             std::cout << "Stopping. No ping in time" << std::endl;
@@ -91,7 +91,11 @@ struct talk_to_client : boost::enable_shared_from_this<talk_to_client> {
 			return true;
 		}
 
-        return ms > 60000 ;
+		if (close) {
+			return true;
+		}
+
+        return ms > 15000 ;
     }
     
     void stop() 
@@ -193,6 +197,10 @@ private:
 		
 		Json::StyledWriter writer;
         write_crypt(writer.write( jsend ));
+
+		// Close connection
+		stop();
+		close = true;
     }
     
     void get_key() {
@@ -244,6 +252,7 @@ private:
     std::string client_ip;
     std::string client_key;
 	bool wait = false;
+	bool close = false;
 };
 
 void accept_thread() 
