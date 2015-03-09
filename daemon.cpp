@@ -188,7 +188,7 @@ private:
 		}
 
 		// Команда может выполняться продолжительное время
-		timeout = 1200000;
+		wait = true;
 
 		try {
 			request_processing(jroot, jsend);
@@ -197,8 +197,9 @@ private:
 			std::cerr << "Error: " << e.what() << std::endl;
 			jsend["status"] = 1;
 		}
-
-		timeout = 15000;
+		
+		last_ping_ = boost::posix_time::microsec_clock::local_time();
+		wait = false;
 
 		Json::StyledWriter writer;
 		write_crypt(writer.write(jsend));
@@ -259,7 +260,7 @@ private:
 		sock_.async_read_some(boost::asio::buffer(read_buffer_, max_msg), MEM_FN2(on_read, _1, _2));
 
 		boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
-		if ((now - last_ping_).total_milliseconds() > timeout) {
+		if ((now - last_ping_).total_milliseconds() > timeout && wait) {
 			std::cout << "Stopping. No ping in time" << std::endl;
 			stop();
 		}
@@ -267,10 +268,8 @@ private:
 	void do_write(const std::string & msg) {
 		if (!started()) return;
 		boost::recursive_mutex::scoped_lock lk(cs_);
-		if (!started()) return;
 		//~ std::copy(msg.begin(), msg.end(), write_buffer_);
-		sock_.async_write_some(buffer(msg),
-			MEM_FN2(on_write, _1, _2));
+		sock_.async_write_some(buffer(msg), MEM_FN2(on_write, _1, _2));
 	}
 private:
 	mutable boost::recursive_mutex cs_;
@@ -286,6 +285,7 @@ private:
 	std::string client_key;
 
 	int timeout = 15000;
+	bool wait = false;
 };
 
 void handle_accept(talk_to_client::ptr client, const boost::system::error_code & err)
@@ -415,9 +415,9 @@ bool daemon_status()
 int main(int argc, char* argv[])
 {
 	// Debug
-	//parse_config();
-	//run_daemon();
-	//return 0;
+	parse_config();
+	run_daemon();
+	return 0;
 
 	if (argc >= 2 && (!strcmp(argv[1], "kill") || !strcmp(argv[1], "stop"))) {
 		if (!daemon_status()) {
