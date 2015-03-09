@@ -13,6 +13,10 @@
 #include "files.h"
 
 #ifdef _WIN32
+<<<<<<< dfe0500901346dcf88aa5963db080c515bc7252c
+=======
+#include <stdlib.h>
+>>>>>>> a584131a6bb64ea2b21f07aafc882faee6f86da6
 #include <windows.h>
 #endif
 
@@ -85,8 +89,8 @@ bool file_put_contents(std::string filename, std::string contents)
 {
 	std::ofstream file(filename);
 	
-	std::cout << "FILENAME: " << filename << std::endl;
-	std::cout << "CONTENTS: " << contents << std::endl;
+	//std::cout << "FILENAME: " << filename << std::endl;
+	//std::cout << "CONTENTS: " << contents << std::endl;
 	
 	if (file.is_open()) {
 		file << contents;
@@ -128,11 +132,18 @@ bool is_dir(std::string filename)
 
 bool make_dir(std::string dir, std::string permissions)
 {
+<<<<<<< dfe0500901346dcf88aa5963db080c515bc7252c
 	wchar_t* wdir = new wchar_t[strlen(dir.c_str()) + 1];
 	mbstowcs(wdir, dir.c_str(), strlen(dir.c_str()) + 1);
 
 	#ifdef _WIN32
 	CreateDirectory(wdir, NULL);
+=======
+	#ifdef _WIN32
+		wchar_t* wdir = new wchar_t[strlen(dir.c_str()) + 1];
+		mbstowcs(wdir, dir.c_str(), strlen(dir.c_str()) + 1);
+		CreateDirectory(wdir, NULL);
+>>>>>>> a584131a6bb64ea2b21f07aafc882faee6f86da6
 	#else
 		mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 		//~ mode_t mode = strtol(permissions.c_str(), NULL, 8);
@@ -140,4 +151,19 @@ bool make_dir(std::string dir, std::string permissions)
 	#endif
 
 	return is_dir(dir);
+}
+
+// ---------------------------------------------------------------------
+
+void change_dir(std::string dir)
+{
+	#ifdef _WIN32
+		wchar_t* wdir = new wchar_t[strlen(dir.c_str()) + 1];
+		mbstowcs(wdir, dir.c_str(), strlen(dir.c_str()) + 1);
+		_wchdir(wdir);
+		//SetCurrentDirectory(wdir);
+	#else
+		
+	#endif
+	
 }

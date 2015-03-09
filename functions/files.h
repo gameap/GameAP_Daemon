@@ -60,5 +60,9 @@ bool is_dir(std::string filename);
  */
 bool make_dir(std::string dir, std::string permissions);
 
+// ---------------------------------------------------------------------
+
+void change_dir(std::string dir);
+
 
 #endif
