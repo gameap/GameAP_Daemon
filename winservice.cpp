@@ -128,9 +128,13 @@ VOID WINAPI ServiceCtrlHandler(DWORD CtrlCode)
 		* Perform tasks neccesary to stop the service here
 		*/
 		g_ServiceStatus.dwControlsAccepted = 0;
-		g_ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+		//g_ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
 		g_ServiceStatus.dwWin32ExitCode = 0;
 		g_ServiceStatus.dwCheckPoint = 4;
+
+
+		g_ServiceStatus.dwWin32ExitCode = 0;
+		g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
 
 		if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE)
 		{
@@ -140,7 +144,8 @@ VOID WINAPI ServiceCtrlHandler(DWORD CtrlCode)
 		// This will signal the worker thread to start shutting down
 		SetEvent(g_ServiceStopEvent);
 		//stop_daemon();
-		exit(ERROR_SUCCESS);
+
+		// exit(ERROR_SUCCESS);
 
 		break;
 
