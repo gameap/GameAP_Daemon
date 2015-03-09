@@ -46,7 +46,7 @@ int port = 31707;							// Используемый порт
 
 std::map<std::string,std::string> client_keys;		// Список клиенских ключей
 
-bool stop = false;
+bool daemon_stop = false;
 
 struct talk_to_client : boost::enable_shared_from_this<talk_to_client> {
     talk_to_client() 
@@ -84,6 +84,11 @@ struct talk_to_client : boost::enable_shared_from_this<talk_to_client> {
 		*/
 		if (wait && ms < 1200000) {
 			return false;
+		}
+
+		// Остановка демона
+		if (daemon_stop) {
+			return true;
 		}
 
         return ms > 60000 ;
@@ -254,6 +259,10 @@ void accept_thread()
 			
 			boost::recursive_mutex::scoped_lock lk(cs);
 			clients.push_back(new_);
+
+			if (daemon_stop) {
+				break;
+			}
 		}
 		
     } catch( std::exception &e ) {
@@ -275,8 +284,24 @@ void handle_clients_thread()
         // erase clients that timed out
         clients.erase(std::remove_if(clients.begin(), clients.end(), 
                    boost::bind(&talk_to_client::timed_out,_1)), clients.end());
+
+		if (daemon_stop) {
+			break;
+		}
     }
 }
+#ifdef WIN32
+std::string exe_path() {
+	TCHAR tbuffer[_MAX_PATH];
+	::GetModuleFileName(NULL, tbuffer, _MAX_PATH);
+
+	std::wstring wbuffer(&tbuffer[0]); //convert to wstring
+	std::string path(wbuffer.begin(), wbuffer.end()); //and convert to string.
+
+	std::string::size_type pos = path.find_last_of("\\/");
+	return path.substr(0, pos);
+}
+#endif
 
 /**
  * Парсер конфигурации
@@ -327,7 +352,7 @@ void fix_crypt_key()
 
 void stop_daemon()
 {
-	stop = true;
+	//daemon_stop = true;
 }
 
 void run_daemon()
@@ -335,7 +360,7 @@ void run_daemon()
 	if (crypt_key.size() != 16) {
 		fix_crypt_key();
 	}
-	
+
 	boost::thread_group threads;
 	threads.create_thread(accept_thread);
 	threads.create_thread(handle_clients_thread);
@@ -354,10 +379,10 @@ bool daemon_status()
 int main(int argc, char* argv[]) 
 {
 	// Debug
-	parse_config();
-	run_daemon();
-	return 0;
-	
+	//parse_config();
+	//run_daemon();
+	//return 0;
+
 	if (argc >= 2 && (!strcmp(argv[1], "kill") || !strcmp(argv[1], "stop"))) {
 		if (!daemon_status()) {
 			printf("Failed: daemon not running\n");
@@ -379,6 +404,7 @@ int main(int argc, char* argv[])
 	} 
 	#ifdef WIN32
 	else if (argc >= 2 && !strcmp(argv[1], "run")) {
+		change_dir(exe_path());
 		parse_config();
 		run_daemon();
 		return 0;
@@ -392,6 +418,7 @@ int main(int argc, char* argv[])
 	
 	#ifdef WIN32
 
+		/*
 		fast_exec("daemon.exe run");
 		Sleep(2000);
 		
@@ -400,8 +427,10 @@ int main(int argc, char* argv[])
 			printf("OK: demon with pid %d is created\n", pid);
 			return 0;
 		}
+		*/
 
-		/*
+		change_dir(exe_path());
+
 		// Run Windows service
 		SERVICE_TABLE_ENTRY ServiceTable[] =
 		{
@@ -414,7 +443,7 @@ int main(int argc, char* argv[])
 			OutputDebugString(L"GDaemon: Main: StartServiceCtrlDispatcher returned error");
 			return GetLastError();
 		}
-		*/
+		
 	#else
 		int pid = fork();
 	
