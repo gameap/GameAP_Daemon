@@ -77,8 +77,8 @@ bool request_processing(Json::Value & jroot, Json::Value & jsend)
 			return 0;
 		}
 		
-		// 2Mb
-		if (filesize(jroot["file"].asString()) > 2000000) {
+		// 1Mb
+		if (filesize(jroot["file"].asString()) > 1000000) {
 			// File big
 			jsend["status"] = 42;
 			return 0;

@@ -275,7 +275,7 @@ private:
 private:
 	mutable boost::recursive_mutex cs_;
 	ip::tcp::socket sock_;
-	enum { max_msg = 3145728 }; // 2 Mb + 40%
+	enum { max_msg = 2000000 }; // 2 Mb
 	char read_buffer_[max_msg];
 	//~ char write_buffer_[max_msg];
 	bool started_;
