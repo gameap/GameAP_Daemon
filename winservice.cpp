@@ -13,6 +13,7 @@ DWORD WINAPI ServiceWorkerThread(LPVOID lpParam);
 
 #define SERVICE_NAME  _T("GameAP Daemon")
 
+
 VOID WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
 {
 	DWORD Status = E_FAIL;
@@ -162,6 +163,7 @@ DWORD WINAPI ServiceWorkerThread(LPVOID lpParam)
 	{
 		Sleep(1000);
 		if (!started) {
+			parse_config();
 			run_daemon();
 			started = true;
 		}

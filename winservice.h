@@ -3,6 +3,7 @@
 
 #include <Windows.h>
 
+void parse_config();
 void run_daemon();
 void stop_daemon();
 
