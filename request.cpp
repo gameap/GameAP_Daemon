@@ -73,7 +73,7 @@ bool request_processing(Json::Value & jroot, Json::Value & jsend)
 		// Read file
 		
 		if (!file_exists(jroot["file"].asString())) {
-			jsend["status"] = 41;
+			jsend["status"] = 3;
 			return 0;
 		}
 		
@@ -108,7 +108,7 @@ bool request_processing(Json::Value & jroot, Json::Value & jsend)
 	}
 	else if (jroot["type"].asString() == "move") {
 		if (!file_exists(jroot["old_file"].asString())) {
-			jsend["status"] = 72;
+			jsend["status"] = 3;
 			return 0;
 		}
 		
@@ -122,7 +122,25 @@ bool request_processing(Json::Value & jroot, Json::Value & jsend)
 	}
 	else if (jroot["type"].asString() == "file_size") {
 		// File size
+		
+		if (!file_exists(jroot["file"].asString())) {
+			jsend["status"] = 3;
+			return 0;
+		}
+		
 		jsend["filesize"] = filesize(jroot["file"].asString());
+		jsend["status"] = 10;
+	}
+	else if (jroot["type"].asString() == "remove") {
+		// File delete
+		
+		if (!file_exists(jroot["file"].asString())) {
+			jsend["status"] = 3;
+			return 0;
+		}
+		
+		remove(jroot["file"].asString().c_str());
+		jsend["status"] = 10;
 	}
 	else if (jroot["type"].asString() == "install") {
 		// Install game server
